@@ -66,8 +66,8 @@ class BotohubClient:
                     code = data.get("SendPostResult", 0)
                     _codes = {
                         1: "success", 2: "invalid token", 3: "user blocked bot",
-                        4: "rate limit", 7: "impression limit", 8: "no ads", 9: "bot disabled",
-                        11: "unknown/queued",
+                        4: "rate limit", 7: "impression limit", 8: "no ads",
+                        9: "bot disabled", 10: "user not started bot", 11: "queued",
                     }
                     logger.info("BotoHub: chat=%s hi=%s → code=%s (%s)", chat_id, hi, code, _codes.get(code, "?"))
                     return code

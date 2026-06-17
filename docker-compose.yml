@@ -1,0 +1,15 @@
+version: "3.9"
+
+services:
+  bot:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - bot_data:/data
+    environment:
+      - DATABASE_PATH=/data/bot.db
+      - SESSIONS_PATH=/data/sessions
+
+volumes:
+  bot_data:

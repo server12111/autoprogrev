@@ -28,26 +28,14 @@ class Database:
     async def get_or_create_user(
         self, telegram_id: int, username: str = None, first_name: str = None
     ) -> User:
-        async with self._conn.execute(
-            "SELECT * FROM users WHERE telegram_id = ?", (telegram_id,)
-        ) as cur:
-            row = await cur.fetchone()
-
-        if row:
-            await self._conn.execute(
-                "UPDATE users SET username = ?, first_name = ? WHERE telegram_id = ?",
-                (username, first_name, telegram_id),
-            )
-            await self._conn.commit()
-            async with self._conn.execute(
-                "SELECT * FROM users WHERE telegram_id = ?", (telegram_id,)
-            ) as cur:
-                row = await cur.fetchone()
-            return User(**dict(row))
-
+        # Атомарный upsert — не даёт IntegrityError при параллельных запросах
         await self._conn.execute(
-            "INSERT INTO users (telegram_id, username, first_name) VALUES (?, ?, ?)",
+            "INSERT OR IGNORE INTO users (telegram_id, username, first_name) VALUES (?, ?, ?)",
             (telegram_id, username, first_name),
+        )
+        await self._conn.execute(
+            "UPDATE users SET username = ?, first_name = ? WHERE telegram_id = ?",
+            (username, first_name, telegram_id),
         )
         await self._conn.commit()
         async with self._conn.execute(
