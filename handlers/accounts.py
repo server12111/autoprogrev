@@ -6,7 +6,7 @@ _tg = lambda eid, ch: f'<tg-emoji emoji-id="{eid}">{ch}</tg-emoji>'
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import CallbackQuery, Message
-from telethon.errors import PhoneCodeInvalidError, SessionPasswordNeededError
+from telethon.errors import PhoneCodeExpiredError, PhoneCodeInvalidError, SessionPasswordNeededError
 
 from config import config
 from database.db import Database
@@ -143,6 +143,19 @@ async def fsm_code(message: Message, state: FSMContext, db: Database, userbot: U
             "🔐 Требуется пароль двухфакторной аутентификации. Введите его:",
             reply_markup=cancel_keyboard("warmup_menu"),
         )
+        return
+    except PhoneCodeExpiredError:
+        try:
+            await userbot.resend_code(phone)
+            await message.answer(
+                "⏱ Код истёк. Отправил новый — введите его:",
+                reply_markup=cancel_keyboard("warmup_menu"),
+            )
+        except Exception as exc:
+            logger.error("resend_code error: %s", exc)
+            await message.answer(f"❌ Не удалось переотправить код: {exc}")
+            await db.update_warming_account_status(account_id, "error", str(exc))
+            await state.clear()
         return
     except PhoneCodeInvalidError:
         await message.answer("❌ Неверный код. Попробуйте снова:")

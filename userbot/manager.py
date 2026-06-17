@@ -64,6 +64,12 @@ class UserbotManager:
                 pass
             raise
 
+    async def resend_code(self, phone: str) -> None:
+        client = self._login_clients.get(phone)
+        if not client:
+            raise ValueError(f"No pending login for {phone}")
+        await client.send_code_request(phone)
+
     async def complete_login(self, phone: str, code: str) -> None:
         client = self._login_clients.get(phone)
         if not client:
